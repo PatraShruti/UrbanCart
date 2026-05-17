@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UrbanCart — Home</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+    body {margin:0; padding:0; font-family:'Roboto', sans-serif; overflow-x:hidden;}
+
+    .ocean {position:relative; width:100%; min-height:100vh; background: linear-gradient(to bottom, #0f1c2f 0%, #0a3d62 40%, #0b5a8e 70%, #052f4f 100%); overflow:hidden;}
+    .wave {position:absolute; bottom:0; left:0; width:200%; height:200px; background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="200" viewBox="0 0 1600 200"><path fill="%230b4d75" d="M0 120 Q 200 80 400 120 T 800 120 T 1200 120 T 1600 120 V200 H0 Z"/></svg>'); background-size:1600px 200px; animation: wave 15s linear infinite; opacity:0.6;}
+    .wave:nth-child(2){bottom:15px; animation:wave 20s linear infinite reverse; opacity:0.4;}
+    .wave:nth-child(3){bottom:30px; animation:wave 25s linear infinite; opacity:0.2;}
+    @keyframes wave {0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+    .bubble{position:absolute; bottom:-100px; border-radius:50%; background:rgba(255,255,255,0.3); animation:rise linear infinite;}
+    @keyframes rise{0%{transform:translateY(0) scale(1); opacity:0;}20%{opacity:1;}100%{transform:translateY(-120vh) scale(1.3); opacity:0;}}
+
+    header {position:relative; text-align:center; padding:40px 20px; color:white; text-shadow: 1px 1px 5px rgba(0,0,0,0.3); z-index:10;}
+    header h1{font-size:3em; margin:0;}
+    header p{font-size:1.2em; margin-top:10px;}
+
+    nav{position:relative; z-index:10; display:flex; justify-content:center; align-items:center; gap:20px; flex-wrap:wrap; background:rgba(243,241,224,0.2); padding:10px; backdrop-filter:blur(5px); border-radius:0 0 20px 20px;}
+    nav a{color:white; text-decoration:none; font-weight:bold; transition:0.3s;}
+    nav a:hover{color:#facc15;}
+    .nav-user-slot{color:white; font-weight:bold;}
+    .nav-user-slot a{color:white; text-decoration:none; font-weight:bold;}
+
+    .hero{position:relative; margin:30px auto; max-width:1200px; overflow:hidden; border-radius:20px; box-shadow:0 5px 15px rgba(0,0,0,0.3); z-index:10;}
+    .slides{display:flex; transition:transform 1s ease-in-out;}
+    .slide{min-width:100%; position:relative;}
+    .slide img{width:100%; height:500px; object-fit:cover; border-radius:20px; display:block;}
+    .slide-content{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); color:white; text-align:center; text-shadow:2px 2px 10px rgba(0,0,0,0.5);}
+    .slide-content h2{font-size:2.5em; margin:0;}
+    .slide-content p{font-size:1.2em; margin:10px 0;}
+    .slide-content a{display:inline-block; padding:12px 25px; background:#facc15; color:#000; font-weight:bold; border-radius:10px; text-decoration:none; transition:0.3s;}
+    .slide-content a:hover{background:#8b5cf6; color:white;}
+
+    .section{position:relative; z-index:10; padding:50px 20px; max-width:1200px; margin:auto;}
+    .section h2{text-align:center; margin-bottom:40px; color:white; text-shadow:1px 1px 5px rgba(0,0,0,0.4);}
+    .categories{display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:30px;}
+    .card{background:rgba(255,255,255,0.9); border-radius:20px; padding:25px; text-align:center; box-shadow:0 5px 20px rgba(0,0,0,0.25); transition:0.3s; cursor:pointer;}
+    .card:hover{transform:translateY(-10px);}
+    .card img{width:100%; border-radius:15px; height:250px; object-fit:cover;}
+    .card h3{margin:15px 0 10px; color:#0ea5a4; font-size:1.8em;}
+
+    .countdown{position:relative; z-index:10; text-align:center; color:white; font-size:1.5em; margin-bottom:20px;}
+
+    /* Featured strip */
+    .featured-strip{position:relative;z-index:10;padding:0 20px 40px;max-width:1200px;margin:auto;}
+    .featured-strip h2{text-align:center;margin-bottom:24px;color:white;text-shadow:1px 1px 5px rgba(0,0,0,0.4);}
+    .feat-shelf{display:flex;gap:16px;overflow-x:auto;padding-bottom:10px;scrollbar-width:thin;}
+    .feat-shelf::-webkit-scrollbar{height:4px;}
+    .feat-shelf::-webkit-scrollbar-thumb{background:rgba(255,255,255,.3);border-radius:2px;}
+    .feat-card{background:rgba(255,255,255,0.9);border-radius:20px;min-width:200px;flex-shrink:0;overflow:hidden;text-align:center;box-shadow:0 5px 15px rgba(0,0,0,.2);transition:.25s;cursor:pointer;color:#222;}
+    .feat-card:hover{transform:translateY(-6px);}
+    .feat-card img,.feat-card .feat-emoji{width:100%;height:160px;object-fit:cover;display:block;background:#f0f4f8;}
+    .feat-card .feat-emoji{display:flex;align-items:center;justify-content:center;font-size:4rem;}
+    .feat-card-body{padding:10px 12px 14px;}
+    .feat-card-name{font-size:.88em;font-weight:700;color:#0ea5a4;margin-bottom:4px;}
+    .feat-card-price{font-size:.9em;font-weight:700;margin-bottom:6px;}
+    .feat-card-disc{font-size:.75em;color:#22c55e;font-weight:700;}
+    .feat-card-btn{width:100%;padding:7px;background:#facc15;border:none;border-radius:8px;font-weight:700;font-size:.82em;cursor:pointer;transition:.2s;}
+    .feat-card-btn:hover{background:#8b5cf6;color:white;}
+
+    .header-flex{display:flex;align-items:center;justify-content:center;gap:25px;padding:25px 20px;color:white;text-align:left;position:relative;z-index:10;}
+    header h1{font-size:2.8em;margin:0;color:#facc15;}
+    header p{font-size:1.2em;margin-top:5px;letter-spacing:1px;}
+
+    /* Cart badge in nav */
+    .cart-count-badge{background:#facc15;color:#000;border-radius:50%;padding:1px 6px;font-size:.75em;font-weight:700;margin-left:3px;}
+
+    footer{position:relative;z-index:10;text-align:center;padding:20px;color:white;text-shadow:1px 1px 5px rgba(0,0,0,0.3);}
+    @media(max-width:768px){header h1{font-size:2.2em;}.slide img{height:300px;}}
+  </style>
+</head>
+<body>
+  <div class="ocean">
+    <div class="wave"></div>
+    <div class="wave"></div>
+    <div class="wave"></div>
+
+    <div class="bubble" style="left:10%;width:15px;height:15px;animation-duration:12s;"></div>
+    <div class="bubble" style="left:30%;width:20px;height:20px;animation-duration:18s;animation-delay:3s;"></div>
+    <div class="bubble" style="left:50%;width:10px;height:10px;animation-duration:10s;animation-delay:6s;"></div>
+    <div class="bubble" style="left:70%;width:25px;height:25px;animation-duration:20s;animation-delay:2s;"></div>
+    <div class="bubble" style="left:90%;width:12px;height:12px;animation-duration:14s;animation-delay:4s;"></div>
+
+    <header class="header-flex">
+      <svg width="60" height="60" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" class="logo">
+        <rect x="3" y="6" width="18" height="15" rx="2" stroke="#facc15" stroke-width="2"/>
+        <path d="M8 6V5C8 3.89543 8.89543 3 10 3H14C15.1046 3 16 3.89543 16 5V6" stroke="#facc15" stroke-width="2" stroke-linecap="round"/>
+        <path d="M10 10V12" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+        <path d="M14 10V12" stroke="#ffffff" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <div>
+        <h1>UrbanCart</h1>
+        <p>CAPTURE THE JOY OF SHOPPING</p>
+      </div>
+    </header>
+
+    <nav id="main-nav">
+      <a href="/">Home</a>
+      <a href="/products">Shop</a>
+      <a href="/cart">Cart <span class="cart-count-badge" style="display:none"></span></a>
+      </nav>
+
+    <div class="hero">
+      <div class="slides" id="slides">
+        <div class="slide">
+          <img src="/static/images/1.jpg" alt="Slide1"
+               onerror="this.src='https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=1200&h=500&fit=crop'">
+          <div class="slide-content"><h2>Big Summer Sale</h2><p>Up to 50% off on selected items!</p><a href="/products">Shop Now</a></div>
+        </div>
+        <div class="slide">
+          <img src="/static/images/2.jpg" alt="Slide2"
+               onerror="this.src='https://images.unsplash.com/photo-1498049794561-7780e7231661?w=1200&h=500&fit=crop'">
+          <div class="slide-content"><h2>Latest Electronics</h2><p>Top gadgets at unbeatable prices!</p><a href="/products">Shop Now</a></div>
+        </div>
+        <div class="slide">
+          <img src="/static/images/3.jpg" alt="Slide3"
+               onerror="this.src='https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&h=500&fit=crop'">
+          <div class="slide-content"><h2>Fashion Trends 2025</h2><p>Upgrade your style today!</p><a href="/products">Shop Now</a></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="countdown">Offer ends in: <span id="time">00d 00h 00m 00s</span></div>
+
+    <div class="featured-strip" id="featured-section">
+      <h2>⭐ Featured Products</h2>
+      <div class="feat-shelf" id="feat-shelf">
+        {% for p in featured %}
+        <div class="feat-card" onclick="location.href='/product/{{ p.id }}'">
+          <img src="{{ p.img }}" alt="{{ p.name }}"
+               onerror="this.outerHTML='<div class=feat-emoji>{{ p.emoji }}</div>'">
+          <div class="feat-card-body">
+            <div class="feat-card-name">{{ p.name }}</div>
+            <div class="feat-card-price">₹{{ "{:,.0f}".format(p.price) }}</div>
+            <div class="feat-card-disc">{{ ((1-p.price/p.mrp)*100)|int }}% off</div>
+            <button class="feat-card-btn" onclick="event.stopPropagation();addToCart({{ p.id }},this)">Add to Cart</button>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <section class="section" id="categories">
+      <h2>Shop by Categories</h2>
+      <div class="categories" id="categoryCards"></div>
+    </section>
+
+    <footer>© <span class="year"></span> UrbanCart — Dynamic Shopping Experience</footer>
+  </div>
+
+  <script src="/static/js/main.js"></script>
+  <script>
+    // Slideshow
+    const slides = document.getElementById('slides');
+    let idx = 0;
+    function showSlides(){ idx=(idx+1)%slides.children.length; slides.style.transform=`translateX(-${idx*100}%)`; }
+    setInterval(showSlides, 4000);
+
+    // Countdown
+    const endDate = new Date(); endDate.setDate(endDate.getDate()+5);
+    function updateCountdown(){
+      const diff=endDate-new Date();
+      const d=Math.floor(diff/864e5),h=Math.floor((diff/36e5)%24),m=Math.floor((diff/6e4)%60),s=Math.floor((diff/1e3)%60);
+      document.getElementById('time').textContent=`${d}d ${h}h ${m}m ${s}s`;
+    }
+    setInterval(updateCountdown,1000); updateCountdown();
+
+    // Category cards — your exact original data
+    const categories = [
+      {name:'Dresses',       img:'/static/images/d.jpg'},
+      {name:'Electronics',   img:'/static/images/ele.webp'},
+      {name:'Footwear',      img:'/static/images/ft.webp'},
+      {name:'Accessories',   img:'/static/images/acc.webp'},
+      {name:'Home & Kitchen',img:'/static/images/hm.webp'},
+      {name:'Makeup',        img:'/static/images/makeup.webp'}
+    ];
+    const fallbacks = {
+      'Dresses':'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?w=400&h=250&fit=crop',
+      'Electronics':'https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&h=250&fit=crop',
+      'Footwear':'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&h=250&fit=crop',
+      'Accessories':'https://images.unsplash.com/photo-1523170335258-f5ed11844a49?w=400&h=250&fit=crop',
+      'Home & Kitchen':'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&h=250&fit=crop',
+      'Makeup':'https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=400&h=250&fit=crop'
+    };
+    const grid = document.getElementById('categoryCards');
+    categories.forEach(c => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <a href="/products?category=${encodeURIComponent(c.name)}" style="text-decoration:none;color:inherit;">
+          <img src="${c.img}" alt="${c.name}" onerror="this.src='${fallbacks[c.name]}'">
+          <h3>${c.name}</h3>
+        </a>`;
+      grid.appendChild(card);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Wishlist – UrbanCart</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+  body{margin:0;padding:0;font-family:'Roboto',sans-serif;background:linear-gradient(to bottom,#0f1c2f,#0a3d62,#0b5a8e,#052f4f);color:white;}
+  header{padding:20px;text-align:center;font-size:2.5em;font-weight:bold;}
+  nav{display:flex;justify-content:center;align-items:center;gap:20px;flex-wrap:wrap;background:rgba(255,255,255,0.2);padding:10px;backdrop-filter:blur(5px);border-radius:0 0 20px 20px;margin-bottom:30px;}
+  nav a{color:white;text-decoration:none;font-weight:bold;}nav a:hover{color:#facc15;}
+  .cart-count-badge{background:#facc15;color:#000;border-radius:50%;padding:1px 6px;font-size:.75em;font-weight:700;margin-left:3px;}
+  .products{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:30px;padding:0 50px 50px;}
+  .product-card{background:rgba(255,255,255,0.9);color:black;border-radius:20px;padding:20px;text-align:center;box-shadow:0 5px 20px rgba(0,0,0,.25);transition:.3s;position:relative;}
+  .product-card:hover{transform:translateY(-10px);}
+  .product-card img,.prod-emoji{width:100%;height:220px;object-fit:cover;border-radius:15px;}
+  .prod-emoji{display:flex;align-items:center;justify-content:center;font-size:5rem;background:#f0f4f8;}
+  .product-card h3{margin:12px 0 6px;color:#0ea5a4;font-size:1.2em;cursor:pointer;}
+  .product-card .prod-price{font-weight:700;font-size:1.1em;margin-bottom:10px;}
+  .buttons{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+  .product-card button{padding:9px 18px;background:#facc15;border:none;border-radius:10px;font-weight:bold;cursor:pointer;transition:.3s;font-family:'Roboto',sans-serif;}
+  .product-card button:hover{background:#8b5cf6;color:white;}
+  .rm-wish{position:absolute;top:10px;right:10px;background:rgba(255,255,255,.9);border:none;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:.95em;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.2);}
+  .rm-wish:hover{transform:scale(1.15);}
+  .empty-msg{text-align:center;font-size:1.3em;padding:60px;color:rgba(255,255,255,.8);}
+  .empty-msg a{display:inline-block;margin-top:20px;padding:12px 28px;background:#facc15;color:#000;border-radius:12px;font-weight:700;text-decoration:none;}
+  .empty-msg a:hover{background:#8b5cf6;color:white;}
+  footer{padding:20px;text-align:center;color:white;text-shadow:1px 1px 5px rgba(0,0,0,.3);}
+  @media(max-width:768px){.products{padding:0 15px 40px;}}
+</style></head>
+<body>
+<header>❤️ My Wishlist</header>
+<nav id="main-nav">
+  <a href="/">Home</a>
+  <a href="/products">Shop</a>
+  <a href="/cart">Cart <span class="cart-count-badge" style="display:none"></span></a>
+</nav>
+
+{% if not items %}
+<div class="empty-msg">Your wishlist is empty.<br><a href="/products">Explore Products</a></div>
+{% else %}
+<div class="products">
+  {% for p in items %}
+  <div class="product-card">
+    <button class="rm-wish" onclick="rmWish({{ p.id }},this)" title="Remove from wishlist">❤️</button>
+    {% if p.img %}
+      <img src="{{ p.img }}" alt="{{ p.name }}" onerror="this.outerHTML='<div class=prod-emoji>{{ p.emoji }}</div>'" onclick="location.href='/product/{{ p.id }}'" style="cursor:pointer;">
+    {% else %}
+      <div class="prod-emoji" onclick="location.href='/product/{{ p.id }}'" style="cursor:pointer;">{{ p.emoji }}</div>
+    {% endif %}
+    <h3 onclick="location.href='/product/{{ p.id }}'">{{ p.name }}</h3>
+    <div class="prod-price">₹{{ "{:,.0f}".format(p.price) }} <span style="font-size:.75em;color:#22c55e;font-weight:700;">{{ ((1-p.price/p.mrp)*100)|int }}% off</span></div>
+    <div class="buttons">
+      <button onclick="mvCart({{ p.id }},this)">Move to Cart</button>
+      <button onclick="location.href='/product/{{ p.id }}'">View</button>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<footer>© <span class="year"></span> UrbanCart</footer>
+<script src="/static/js/main.js"></script>
+<script>
+async function rmWish(pid,btn){
+  await api('/api/wishlist/toggle',{method:'POST',body:{product_id:pid}});
+  btn.closest('.product-card').remove(); showToast('Removed from wishlist');
+}
+async function mvCart(pid,btn){
+  btn.disabled=true;btn.textContent='…';
+  try{await api('/api/wishlist/move-to-cart',{method:'POST',body:{product_id:pid}});showToast('Moved to cart 🛒','success');refreshCartBadge();btn.closest('.product-card').remove();}
+  catch(e){showToast(e.message,'error');btn.disabled=false;btn.textContent='Move to Cart';}
+}
+</script>
+</body></html>

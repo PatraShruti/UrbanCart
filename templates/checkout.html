@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout – UrbanCart</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+  body { margin:0;padding:0;font-family:'Roboto',sans-serif;background:linear-gradient(to bottom,#0f1c2f 0%,#0a3d62 40%,#0b5a8e 70%,#052f4f 100%);color:white; }
+  header { padding:20px;text-align:center;font-size:2.5em;font-weight:bold; }
+  nav { display:flex;justify-content:center;align-items:center;gap:20px;flex-wrap:wrap;background:rgba(255,255,255,0.2);padding:10px;backdrop-filter:blur(5px);border-radius:0 0 20px 20px;margin-bottom:30px; }
+  nav a { color:white;text-decoration:none;font-weight:bold;transition:0.3s; }
+  nav a:hover { color:#facc15; }
+  .cart-count-badge { background:#facc15;color:#000;border-radius:50%;padding:1px 6px;font-size:.75em;font-weight:700;margin-left:3px; }
+
+  .checkout-container { max-width:800px;margin:0 auto;padding:20px;background:rgba(255,255,255,0.9);color:black;border-radius:20px;box-shadow:0 5px 20px rgba(0,0,0,0.25); }
+  h2 { text-align:center;color:#0ea5a4; }
+  .form-group { margin-bottom:15px;display:flex;flex-direction:column; }
+  label { margin-bottom:5px;font-weight:bold; }
+  input,select,textarea { padding:10px;border-radius:10px;border:1px solid #ccc;font-size:1em;font-family:'Roboto',sans-serif;outline:none;transition:.2s; }
+  input:focus,select:focus,textarea:focus { border-color:#0ea5a4; }
+
+  /* Order preview inside form */
+  .order-preview { background:#f0fdfd;border:1px solid #0ea5a4;border-radius:12px;padding:14px;margin-bottom:16px; }
+  .order-preview h3 { color:#0ea5a4;margin:0 0 10px;font-size:1em; }
+  .op-item { display:flex;justify-content:space-between;font-size:.88em;padding:4px 0;border-bottom:1px solid #e0fafa; }
+  .op-item:last-child { border:none; }
+  .op-total { display:flex;justify-content:space-between;font-weight:700;color:#0ea5a4;padding-top:8px;margin-top:4px;border-top:2px solid #0ea5a4; }
+
+  /* Saved addresses */
+  .addr-card { border:2px solid #e0e0e0;border-radius:10px;padding:12px;margin-bottom:8px;cursor:pointer;transition:.2s; }
+  .addr-card:hover,.addr-card.selected { border-color:#0ea5a4;background:#f0fdfd; }
+  .addr-tag { background:#e0fafa;color:#0ea5a4;font-size:.75em;font-weight:700;padding:2px 8px;border-radius:6px;margin-bottom:4px;display:inline-block; }
+  .addr-name { font-weight:700;font-size:.92em; }
+  .addr-text { font-size:.84em;color:#555;line-height:1.5; }
+
+  button#confirmBtn { padding:15px 30px;background:#facc15;border:none;border-radius:15px;font-weight:bold;cursor:pointer;transition:0.3s;width:100%;margin-top:20px;font-family:'Roboto',sans-serif;font-size:1em; }
+  button#confirmBtn:hover { background:#8b5cf6;color:white; }
+  button#confirmBtn:disabled { opacity:.5;cursor:not-allowed; }
+
+  /* Success overlay */
+  .success-overlay { position:fixed;inset:0;background:rgba(5,25,45,.92);display:none;align-items:center;justify-content:center;z-index:9999; }
+  .success-overlay.show { display:flex; }
+  .success-card { background:rgba(255,255,255,.97);border-radius:20px;padding:40px;max-width:440px;width:90%;text-align:center;color:#222;box-shadow:0 20px 60px rgba(0,0,0,.5); }
+  .success-card .s-icon { font-size:3.5rem;margin-bottom:10px; }
+  .success-card h2 { color:#0ea5a4;margin-bottom:6px; }
+  .order-code-tag { background:#f0fdfd;border:2px solid #0ea5a4;border-radius:10px;padding:10px 20px;font-weight:700;color:#0ea5a4;display:inline-block;margin:12px 0;font-size:1.05em; }
+  .success-card p { color:#555;margin-bottom:20px; }
+  .success-btns { display:flex;gap:12px;justify-content:center;flex-wrap:wrap; }
+  .success-btns a { padding:11px 22px;border-radius:12px;font-weight:700;text-decoration:none;transition:.2s; }
+  .sb-yellow { background:#facc15;color:#000; }
+  .sb-yellow:hover { background:#8b5cf6;color:white; }
+  .sb-outline { border:2px solid #ccc;color:#555; }
+  .sb-outline:hover { border-color:#0ea5a4;color:#0ea5a4; }
+
+  footer { padding:20px;text-align:center;color:white;text-shadow:1px 1px 5px rgba(0,0,0,.3);margin-top:50px; }
+</style>
+</head>
+<body>
+
+<header>Checkout</header>
+<nav id="main-nav">
+  <a href="/">Home</a>
+  <a href="/products">Shop</a>
+  <a href="/cart">Cart <span class="cart-count-badge" style="display:none"></span></a>
+</nav>
+
+<div class="checkout-container">
+  <h2>Checkout Details</h2>
+
+  <div class="order-preview" id="orderPreview">Loading cart…</div>
+
+  {% if addresses %}
+  <div style="margin-bottom:16px;">
+    <div style="font-weight:700;color:#0ea5a4;margin-bottom:8px;">📍 Saved Addresses</div>
+    {% for a in addresses %}
+    <div class="addr-card {% if loop.first %}selected{% endif %}"
+         onclick="selAddr(this,'{{ a.full_name }}, {{ a.phone }}, {{ a.line1 }}{% if a.line2 %}, {{ a.line2 }}{% endif %}, {{ a.city }}, {{ a.state }} – {{ a.pincode }}')"
+         id="ac-{{ a.id }}">
+      <div class="addr-tag">{{ a.label }}</div>
+      <div class="addr-name">{{ a.full_name }} &nbsp;<span style="color:#888;font-size:.85em;">{{ a.phone }}</span></div>
+      <div class="addr-text">{{ a.line1 }}{% if a.line2 %}, {{ a.line2 }}{% endif %}, {{ a.city }}, {{ a.state }} – {{ a.pincode }}</div>
+    </div>
+    {% endfor %}
+    <details style="margin-top:6px;"><summary style="cursor:pointer;color:#0ea5a4;font-weight:700;font-size:.9em;list-style:none;">+ Add New Address</summary>
+      <div style="margin-top:12px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="form-group"><label>Full Name</label><input id="an" placeholder="Full Name"></div>
+          <div class="form-group"><label>Phone</label><input id="ap" placeholder="Phone"></div>
+        </div>
+        <div class="form-group"><label>Address Line 1</label><input id="al1" placeholder="House, Street, Area"></div>
+        <div class="form-group"><label>Address Line 2</label><input id="al2" placeholder="Landmark (optional)"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <div class="form-group"><label>City</label><input id="ac2"></div>
+          <div class="form-group"><label>State</label><input id="astate"></div>
+        </div>
+        <div class="form-group"><label>PIN Code</label><input id="apin"></div>
+        <button type="button" style="width:auto;padding:9px 20px;margin-top:6px;" onclick="saveAddr()">Save Address</button>
+      </div>
+    </details>
+  </div>
+  {% else %}
+  <div class="form-group">
+    <label for="name">Full Name</label>
+    <input type="text" id="name" placeholder="Enter your full name" required>
+  </div>
+  <div class="form-group">
+    <label>Address</label>
+    <textarea id="address" rows="3" placeholder="Enter your shipping address" required></textarea>
+  </div>
+  {% endif %}
+
+  <div class="form-group">
+    <label for="email">Email</label>
+    <input type="email" id="email" placeholder="Enter your email" required>
+  </div>
+
+  <div class="form-group">
+    <label for="payment">Payment Method</label>
+    <select id="payment" required onchange="renderPreview()">
+      <option value="">Select Payment Method</option>
+      <option value="credit">Credit/Debit Card</option>
+      <option value="upi">UPI / GPay / PhonePe</option>
+      <option value="cod">Cash on Delivery</option>
+      <option value="netbanking">Net Banking</option>
+    </select>
+  </div>
+
+  <button id="confirmBtn">Confirm Order</button>
+</div>
+
+<div class="success-overlay" id="successOverlay">
+  <div class="success-card">
+    <div class="s-icon">🎉</div>
+    <h2>Order Confirmed!</h2>
+    <div class="order-code-tag" id="orderCode"></div>
+    <p>✅ Thank you for shopping with UrbanCart!</p>
+    <div class="success-btns">
+      <a href="/orders" class="sb-yellow">View Orders</a>
+      <a href="/products" class="sb-outline">Continue Shopping</a>
+    </div>
+  </div>
+</div>
+
+<footer>© <span class="year"></span> UrbanCart — Dynamic Shopping Experience</footer>
+
+<script src="/static/js/main.js"></script>
+<script>
+let cartData    = [];
+let addrSnap    = '{% if addresses %}{{ addresses[0].full_name }}, {{ addresses[0].city }}{% endif %}';
+let selectedPay = '';
+
+function selAddr(el, snap) {
+  document.querySelectorAll('.addr-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  addrSnap = snap;
+}
+
+async function loadPreview() {
+  try {
+    cartData = await api('/api/cart');
+    if (!cartData.length) { window.location.href='/cart'; return; }
+    renderPreview();
+  } catch(e) { console.error(e); }
+}
+
+function renderPreview() {
+  const pay      = document.getElementById('payment').value;
+  const subtotal = cartData.reduce((s,i)=>s+i.price*i.qty,0);
+  const shipping = subtotal>=499?0:40;
+  const cod      = pay==='cod'?50:0;
+  const total    = subtotal+shipping+cod;
+  document.getElementById('orderPreview').innerHTML = `
+    <h3>Order Summary (${cartData.length} item${cartData.length>1?'s':''})</h3>
+    ${cartData.map(i=>`<div class="op-item"><span>${i.emoji||''} ${i.name} ×${i.qty}</span><span>₹${Math.round(i.price*i.qty).toLocaleString('en-IN')}</span></div>`).join('')}
+    <div class="op-item"><span>Delivery</span><span>${shipping===0?'<b style="color:#22c55e">FREE</b>':'₹'+shipping}</span></div>
+    ${cod?`<div class="op-item"><span>COD Fee</span><span>₹50</span></div>`:''}
+    <div class="op-total"><span>Total</span><span>₹${Math.round(total).toLocaleString('en-IN')}</span></div>`;
+}
+
+async function saveAddr() {
+  const d={full_name:document.getElementById('an').value.trim(),phone:document.getElementById('ap').value.trim(),line1:document.getElementById('al1').value.trim(),line2:document.getElementById('al2').value.trim(),city:document.getElementById('ac2').value.trim(),state:document.getElementById('astate').value.trim(),pincode:document.getElementById('apin').value.trim(),label:'Home'};
+  if(!d.full_name||!d.phone||!d.line1||!d.city||!d.state||!d.pincode){showToast('Please fill all address fields','error');return;}
+  try{await api('/api/address/add',{method:'POST',body:d});showToast('Address saved!','success');setTimeout(()=>location.reload(),700);}
+  catch(e){showToast(e.message,'error');}
+}
+
+document.getElementById('confirmBtn').addEventListener('click', async () => {
+  const email   = document.getElementById('email').value.trim();
+  const payment = document.getElementById('payment').value;
+
+  // Build address snap
+  let addr = addrSnap;
+  if (!addr) {
+    const nameEl = document.getElementById('name');
+    const addrEl = document.getElementById('address');
+    if (nameEl && addrEl) addr = `${nameEl.value.trim()}, ${addrEl.value.trim()}`;
+  }
+
+  const emailPattern = /^[^ ]+@[^ ]+\.[a-z]{2,3}$/i;
+  if (!email || !address && !addr) { alert('⚠️ Please fill in all fields.'); return; }
+  if (!emailPattern.test(email))   { alert('⚠️ Please enter a valid Email address.'); return; }
+  if (!payment)                    { alert('⚠️ Please select a Payment Method.'); return; }
+  if (!addr)                       { alert('⚠️ Please provide a delivery address.'); return; }
+
+  const btn = document.getElementById('confirmBtn');
+  btn.disabled = true; btn.textContent = 'Placing order…';
+
+  try {
+    const res = await api('/api/checkout', { method:'POST', body:{ payment, address_snap: addr }});
+    document.getElementById('orderCode').textContent = `Order ID: ${res.order_code}`;
+    document.getElementById('successOverlay').classList.add('show');
+    refreshCartBadge();
+  } catch(e) {
+    alert('❌ ' + e.message);
+    btn.disabled = false; btn.textContent = 'Confirm Order';
+  }
+});
+
+loadPreview();
+</script>
+</body>
+</html>

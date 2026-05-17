@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>{{ product.name }} – UrbanCart</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+  body{margin:0;padding:0;font-family:'Roboto',sans-serif;background:linear-gradient(to bottom,#0f1c2f,#0a3d62,#0b5a8e,#052f4f);color:white;}
+  header{padding:20px;text-align:center;font-size:2.5em;font-weight:bold;}
+  nav{display:flex;justify-content:center;align-items:center;gap:20px;flex-wrap:wrap;background:rgba(255,255,255,0.2);padding:10px;backdrop-filter:blur(5px);border-radius:0 0 20px 20px;margin-bottom:20px;}
+  nav a{color:white;text-decoration:none;font-weight:bold;transition:.3s;}nav a:hover{color:#facc15;}
+  .cart-count-badge{background:#facc15;color:#000;border-radius:50%;padding:1px 6px;font-size:.75em;font-weight:700;margin-left:3px;}
+  .detail-wrap{max-width:1100px;margin:0 auto;padding:20px;}
+  .breadcrumb{font-size:.82em;color:rgba(255,255,255,.6);margin-bottom:16px;display:flex;gap:6px;flex-wrap:wrap;}
+  .breadcrumb a{color:#facc15;}
+  .detail-grid{display:grid;grid-template-columns:420px 1fr;gap:24px;align-items:start;}
+  .detail-img-box{background:rgba(255,255,255,.92);border-radius:20px;padding:16px;box-shadow:0 5px 20px rgba(0,0,0,.25);}
+  .detail-img{width:100%;height:360px;object-fit:contain;border-radius:12px;}
+  .detail-emoji{width:100%;height:360px;display:flex;align-items:center;justify-content:center;font-size:9rem;background:#f5f7fa;border-radius:12px;}
+  .detail-info{background:rgba(255,255,255,.92);border-radius:20px;padding:24px;color:#222;box-shadow:0 5px 20px rgba(0,0,0,.25);}
+  .detail-brand{font-size:.82em;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;}
+  .detail-name{font-size:1.6em;font-weight:700;color:#0ea5a4;margin-bottom:12px;}
+  .detail-rating{display:inline-flex;align-items:center;gap:8px;margin-bottom:14px;}
+  .rating-pill{background:#22c55e;color:white;padding:3px 10px;border-radius:20px;font-size:.88em;font-weight:700;}
+  .detail-price{font-size:1.9em;font-weight:700;color:#111;margin-bottom:4px;}
+  .detail-mrp{font-size:.9em;color:#aaa;margin-bottom:4px;}
+  .detail-disc{font-size:1em;color:#22c55e;font-weight:700;margin-bottom:16px;}
+  .detail-desc{font-size:.9em;color:#555;line-height:1.7;background:#f9fafb;padding:12px;border-radius:10px;margin-bottom:20px;}
+  .detail-actions{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px;}
+  .detail-actions button{padding:13px 28px;border:none;border-radius:12px;font-weight:700;font-size:.95em;cursor:pointer;transition:.2s;font-family:'Roboto',sans-serif;}
+  .btn-addcart{background:#facc15;color:#000;}.btn-addcart:hover{background:#8b5cf6;color:white;}
+  .btn-buynow{background:#0ea5a4;color:white;}.btn-buynow:hover{background:#0891b2;}
+  .btn-wish{background:none;border:2px solid #e0e0e0 !important;color:#333;border-radius:12px !important;}.btn-wish:hover{border-color:#0ea5a4 !important;color:#0ea5a4;}
+  .detail-meta{border-top:1px solid #eee;padding-top:14px;font-size:.88em;}
+  .detail-meta-row{display:flex;gap:10px;margin-bottom:6px;}
+  .dmk{font-weight:700;color:#888;min-width:90px;}
+
+  /* Reviews */
+  .review-box{background:rgba(255,255,255,.92);border-radius:20px;padding:24px;color:#222;box-shadow:0 5px 20px rgba(0,0,0,.25);margin-top:20px;}
+  .review-box h2{color:#0ea5a4;font-size:1.2em;margin-bottom:16px;}
+  .rev-card{border-bottom:1px solid #f0f0f0;padding:12px 0;}
+  .rev-card:last-of-type{border:none;}
+  .rev-stars{color:#facc15;}.rev-user{font-weight:700;font-size:.88em;margin-left:8px;}
+  .rev-date{font-size:.78em;color:#aaa;margin-left:auto;}
+  .rev-title{font-weight:700;font-size:.9em;margin:6px 0 3px;}
+  .rev-body{font-size:.87em;color:#555;line-height:1.6;}
+  .star-picker{display:flex;gap:6px;font-size:1.8em;cursor:pointer;margin-bottom:12px;}
+  .star-picker span{color:#ddd;transition:.15s;}.star-picker span.lit{color:#facc15;}
+  .rev-form input,.rev-form textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;font-size:.9em;font-family:'Roboto',sans-serif;outline:none;margin-bottom:10px;box-sizing:border-box;}
+  .rev-form input:focus,.rev-form textarea:focus{border-color:#0ea5a4;}
+  .rev-submit{padding:10px 24px;background:#facc15;border:none;border-radius:10px;font-weight:700;cursor:pointer;transition:.2s;font-family:'Roboto',sans-serif;}
+  .rev-submit:hover{background:#8b5cf6;color:white;}
+
+  /* Related */
+  .related-section{max-width:1100px;margin:20px auto;padding:0 20px 40px;}
+  .related-section h2{color:white;text-align:center;margin-bottom:20px;}
+  .related-shelf{display:flex;gap:16px;overflow-x:auto;padding-bottom:8px;scrollbar-width:thin;}
+  .rel-card{background:rgba(255,255,255,.9);border-radius:20px;min-width:190px;flex-shrink:0;overflow:hidden;text-align:center;color:#222;box-shadow:0 5px 15px rgba(0,0,0,.2);cursor:pointer;transition:.25s;}
+  .rel-card:hover{transform:translateY(-6px);}
+  .rel-card img,.rel-card .rel-emoji{width:100%;height:150px;object-fit:cover;display:block;background:#f0f4f8;}
+  .rel-card .rel-emoji{display:flex;align-items:center;justify-content:center;font-size:4rem;}
+  .rel-card-body{padding:10px 12px 12px;}
+  .rel-name{font-size:.88em;font-weight:700;color:#0ea5a4;margin-bottom:4px;}
+  .rel-price{font-size:.9em;font-weight:700;}
+
+  footer{padding:20px;text-align:center;color:white;text-shadow:1px 1px 5px rgba(0,0,0,.3);}
+  @media(max-width:900px){.detail-grid{grid-template-columns:1fr;}.detail-img-box{max-width:420px;margin:0 auto;}}
+</style>
+</head>
+<body>
+<header>UrbanCart</header>
+<nav id="main-nav">
+  <a href="/">Home</a><a href="/products">Shop</a>
+  <a href="/cart">Cart <span class="cart-count-badge" style="display:none"></span></a>
+</nav>
+
+<div class="detail-wrap">
+  <div class="breadcrumb">
+    <a href="/">Home</a> ›
+    <a href="/products?category={{ product.cat_name|urlencode }}">{{ product.cat_name }}</a> ›
+    <span>{{ product.name }}</span>
+  </div>
+
+  <div class="detail-grid">
+    <div class="detail-img-box">
+      {% if product.img %}
+        <img class="detail-img" src="{{ product.img }}" alt="{{ product.name }}"
+             onerror="this.outerHTML='<div class=detail-emoji>{{ product.emoji }}</div>'">
+      {% else %}<div class="detail-emoji">{{ product.emoji }}</div>{% endif %}
+    </div>
+
+    <div class="detail-info">
+      <div class="detail-brand">{{ product.brand }}</div>
+      <div class="detail-name">{{ product.name }}</div>
+      <div class="detail-rating">
+        <span class="rating-pill">★ {{ product.rating }}</span>
+        <span style="font-size:.85em;color:#888;">{{ product.reviews }} ratings</span>
+        {% if product.stock < 15 %}<span style="color:#ef4444;font-size:.85em;">Only {{ product.stock }} left!</span>{% endif %}
+      </div>
+      <hr style="border:none;border-top:1px solid #eee;margin:12px 0;">
+      <div class="detail-price">₹{{ "{:,.0f}".format(product.price) }}</div>
+      <div class="detail-mrp">MRP <s>₹{{ "{:,.0f}".format(product.mrp) }}</s></div>
+      <div class="detail-disc">{{ ((1-product.price/product.mrp)*100)|int }}% off — You save ₹{{ "{:,.0f}".format(product.mrp-product.price) }}</div>
+      {% if product.description %}<div class="detail-desc">{{ product.description }}</div>{% endif %}
+      <div class="detail-actions">
+        <button class="btn-addcart" onclick="addToCart({{ product.id }},this)">🛒 Add to Cart</button>
+        <button class="btn-buynow" onclick="buyNow({{ product.id }})">⚡ Buy Now</button>
+        <button class="btn-wish" onclick="toggleWishlist({{ product.id }},this)" style="font-size:1.1em;width:46px;height:46px;padding:0;display:flex;align-items:center;justify-content:center;">{% if in_wish %}❤️{% else %}🤍{% endif %}</button>
+      </div>
+      <div class="detail-meta">
+        <div class="detail-meta-row"><span class="dmk">Category</span><span>{{ product.cat_name }}</span></div>
+        <div class="detail-meta-row"><span class="dmk">Brand</span><span>{{ product.brand or '—' }}</span></div>
+        <div class="detail-meta-row"><span class="dmk">In Stock</span><span style="color:{% if product.stock>20 %}#22c55e{% else %}#ef4444{% endif %};">{{ product.stock }} units</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="review-box">
+    <h2>⭐ Ratings & Reviews</h2>
+    <div style="display:flex;gap:20px;align-items:start;flex-wrap:wrap;">
+      <div style="text-align:center;min-width:110px;">
+        <div style="font-size:3em;font-weight:700;">{{ product.rating }}</div>
+        <div style="color:#facc15;font-size:1.2em;">{{ '★'*(product.rating|round|int) }}{{ '☆'*(5-product.rating|round|int) }}</div>
+        <div style="font-size:.8em;color:#888;">{{ product.reviews }} reviews</div>
+      </div>
+      <div style="flex:1;">
+        {% if reviews %}{% for r in reviews %}
+        <div class="rev-card">
+          <div style="display:flex;align-items:center;margin-bottom:5px;">
+            <span class="rev-stars">{{ '★'*r.rating }}{{ '☆'*(5-r.rating) }}</span>
+            <span class="rev-user">{{ r.username }}</span>
+            <span class="rev-date">{{ r.created_at[:10] }}</span>
+          </div>
+          {% if r.title %}<div class="rev-title">{{ r.title }}</div>{% endif %}
+          {% if r.body %}<div class="rev-body">{{ r.body }}</div>{% endif %}
+        </div>
+        {% endfor %}{% else %}
+        <div style="color:#888;font-size:.9em;">No reviews yet — be the first!</div>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if user %}
+    <hr style="border:none;border-top:1px solid #eee;margin:20px 0;">
+    <h3 style="color:#0ea5a4;margin-bottom:12px;">Write a Review</h3>
+    <div class="star-picker" id="spick"><span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5">★</span></div>
+    <div class="rev-form">
+      <input id="rtitle" placeholder="Review title (optional)">
+      <textarea id="rbody" rows="3" placeholder="Share your experience…"></textarea>
+      <button class="rev-submit" onclick="submitRev()">Submit Review</button>
+    </div>
+    {% else %}
+    <div style="margin-top:14px;font-size:.88em;color:#888;"><a href="/login" style="color:#0ea5a4;">Login</a> to write a review</div>
+    {% endif %}
+  </div>
+</div>
+
+{% if related %}
+<div class="related-section">
+  <h2>You may also like</h2>
+  <div class="related-shelf">
+    {% for p in related %}
+    <div class="rel-card" onclick="location.href='/product/{{ p.id }}'">
+      {% if p.img %}<img src="{{ p.img }}" alt="{{ p.name }}" onerror="this.outerHTML='<div class=rel-emoji>{{ p.emoji }}</div>'">
+      {% else %}<div class="rel-emoji">{{ p.emoji }}</div>{% endif %}
+      <div class="rel-card-body">
+        <div class="rel-name">{{ p.name }}</div>
+        <div class="rel-price">₹{{ "{:,.0f}".format(p.price) }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<footer>© <span class="year"></span> UrbanCart — Dynamic Shopping Experience</footer>
+<script src="/static/js/main.js"></script>
+<script>
+  let selRating=0;
+  document.querySelectorAll('#spick span').forEach(s=>{
+    s.addEventListener('mouseover',()=>hl(+s.dataset.v));
+    s.addEventListener('mouseout', ()=>hl(selRating));
+    s.addEventListener('click',    ()=>{selRating=+s.dataset.v;hl(selRating);});
+  });
+  function hl(n){document.querySelectorAll('#spick span').forEach((s,i)=>s.classList.toggle('lit',i<n));}
+
+  async function submitRev(){
+    if(!selRating){showToast('Please pick a star rating','error');return;}
+    try{
+      await api('/api/review/add',{method:'POST',body:{product_id:{{ product.id }},rating:selRating,title:document.getElementById('rtitle').value.trim(),body:document.getElementById('rbody').value.trim()}});
+      showToast('Review submitted ✅','success');
+      setTimeout(()=>location.reload(),1200);
+    }catch(e){showToast(e.message,'error');}
+  }
+  async function buyNow(pid){
+    try{await api('/api/cart/add',{method:'POST',body:{product_id:pid}});window.location.href='/checkout';}
+    catch(e){showToast(e.message,'error');if(e.message.includes('login'))setTimeout(()=>window.location.href='/login',1500);}
+  }
+</script>
+</body>
+</html>

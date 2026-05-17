@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UrbanCart – Products</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+  body { margin:0; padding:0; font-family:'Roboto',sans-serif; background:linear-gradient(to bottom,#0f1c2f,#0a3d62,#0b5a8e,#052f4f); color:white; }
+  header { padding:20px; text-align:center; font-size:2.5em; font-weight:bold; }
+  nav { display:flex; justify-content:center; align-items:center; gap:20px; flex-wrap:wrap; background:rgba(255,255,255,0.2); padding:10px; backdrop-filter:blur(5px); border-radius:0 0 20px 20px; margin-bottom:20px; }
+  nav a { color:white; text-decoration:none; font-weight:bold; transition:0.3s; }
+  nav a:hover { color:#facc15; }
+  .cart-count-badge { background:#facc15; color:#000; border-radius:50%; padding:1px 6px; font-size:.75em; font-weight:700; margin-left:3px; }
+
+  /* Search bar */
+  .search-wrap { display:flex; justify-content:center; margin:0 20px 16px; }
+  .search-wrap input { padding:10px 20px; width:100%; max-width:480px; border-radius:10px; border:none; font-size:1em; outline:none; background:rgba(255,255,255,0.92); color:#333; font-family:'Roboto',sans-serif; }
+
+  /* Filter strip */
+  .filter-strip { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; margin:0 20px 16px; align-items:center; }
+  .filter-strip label { font-size:.85em; color:rgba(255,255,255,.7); }
+  .filter-strip select { padding:7px 14px; border-radius:10px; border:none; background:rgba(255,255,255,.9); color:#333; font-family:'Roboto',sans-serif; font-size:.88em; }
+  .filter-strip input[type=range] { accent-color:#facc15; }
+  .price-label { font-size:.82em; color:#facc15; font-weight:700; }
+
+  .category-tabs { display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin:0 20px 20px; }
+  .category-tabs button { padding:10px 20px; border:none; border-radius:10px; background:#facc15; font-weight:bold; cursor:pointer; transition:0.3s; font-family:'Roboto',sans-serif; }
+  .category-tabs button:hover, .category-tabs button.active { background:#8b5cf6; color:white; }
+
+  .results-bar { text-align:center; font-size:.85em; color:rgba(255,255,255,.6); margin-bottom:12px; }
+
+  .products { display:grid; grid-template-columns:repeat(auto-fit,minmax(250px,1fr)); gap:30px; padding:0 50px 50px; }
+  .product-card { background:rgba(255,255,255,0.9); color:black; border-radius:20px; padding:20px; text-align:center; box-shadow:0 5px 20px rgba(0,0,0,0.25); transition:0.3s; position:relative; }
+  .product-card:hover { transform:translateY(-10px); }
+  .product-card img, .product-card .prod-emoji { width:100%; height:250px; object-fit:cover; border-radius:15px; }
+  .product-card .prod-emoji { display:flex; align-items:center; justify-content:center; font-size:6rem; background:#f0f4f8; }
+  .product-card h3 { margin:15px 0 5px; color:#0ea5a4; font-size:1.2em; }
+  .product-card .prod-brand { font-size:.8em; color:#888; margin-bottom:4px; }
+  .product-card .prod-rating { display:inline-block; background:#22c55e; color:white; font-size:.75em; font-weight:700; padding:2px 8px; border-radius:20px; margin-bottom:8px; }
+  .product-card .prod-prices { display:flex; align-items:baseline; justify-content:center; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+  .product-card .prod-price { font-size:1.1em; font-weight:700; }
+  .product-card .prod-mrp { font-size:.82em; color:#999; text-decoration:line-through; }
+  .product-card .prod-disc { font-size:.8em; color:#22c55e; font-weight:700; }
+  .buttons { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+  .product-card button { padding:9px 18px; background:#facc15; border:none; border-radius:10px; font-weight:bold; cursor:pointer; transition:0.3s; font-family:'Roboto',sans-serif; }
+  .product-card button:hover { background:#8b5cf6; color:white; }
+  .product-card button:disabled { opacity:.5; cursor:not-allowed; }
+  /* Wish button on card */
+  .wish-card-btn { position:absolute; top:10px; right:10px; background:rgba(255,255,255,.9); border:none !important; border-radius:50% !important; width:32px; height:32px; display:flex; align-items:center; justify-content:center; font-size:.95em; padding:0 !important; box-shadow:0 2px 6px rgba(0,0,0,.2); }
+  .wish-card-btn:hover { transform:scale(1.15) !important; background:white !important; }
+
+  .empty-msg { text-align:center; font-size:1.3em; padding:60px; color:rgba(255,255,255,.7); }
+  footer { padding:20px; text-align:center; color:white; text-shadow:1px 1px 5px rgba(0,0,0,.3); }
+
+  @media(max-width:768px){ .products{padding:0 15px 40px;} }
+</style>
+</head>
+<body>
+
+<header>UrbanCart – Products</header>
+
+<nav id="main-nav">
+  <a href="/">Home</a>
+  <a href="/products">Shop</a>
+  <a href="/cart">Cart <span class="cart-count-badge" style="display:none"></span></a>
+</nav>
+
+<div class="search-wrap">
+  <input type="text" id="searchInput" placeholder="🔍 Search products, brands…" oninput="debouncedLoad()">
+</div>
+
+<div class="filter-strip">
+  <label>Sort:</label>
+  <select id="sortSel" onchange="loadProducts()">
+    <option value="rating">Relevance</option>
+    <option value="price_asc">Price ↑</option>
+    <option value="price_desc">Price ↓</option>
+    <option value="reviews">Popularity</option>
+  </select>
+  <label>Max Price: ₹<span id="price-lbl">25000</span></label>
+  <input type="range" id="maxPrice" min="99" max="25000" step="100" value="25000" oninput="document.getElementById('price-lbl').textContent=this.value;debouncedLoad()">
+</div>
+
+<div class="category-tabs" id="catTabs">
+  <button onclick="filterCat('Dresses',this)">Dresses</button>
+  <button onclick="filterCat('Electronics',this)">Electronics</button>
+  <button onclick="filterCat('Footwear',this)">Footwear</button>
+  <button onclick="filterCat('Accessories',this)">Accessories</button>
+  <button onclick="filterCat('Home &amp; Kitchen',this)">Home &amp; Kitchen</button>
+  <button onclick="filterCat('Makeup',this)">Makeup</button>
+</div>
+
+<div class="results-bar" id="results-bar"></div>
+<div class="products" id="productGrid"></div>
+
+<footer>© <span class="year"></span> UrbanCart – captures the joy of shopping.</footer>
+
+<script src="/static/js/main.js"></script>
+<script>
+let currentCat = 'Dresses';
+let debTimer;
+
+function filterCat(cat, btn) {
+  currentCat = cat;
+  document.querySelectorAll('.category-tabs button').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  document.getElementById('searchInput').value = '';
+  loadProducts();
+}
+
+function debouncedLoad() {
+  clearTimeout(debTimer);
+  debTimer = setTimeout(loadProducts, 280);
+}
+
+async function loadProducts() {
+  const grid = document.getElementById('productGrid');
+  const q    = document.getElementById('searchInput').value.trim();
+  const sort = document.getElementById('sortSel').value;
+  const maxP = document.getElementById('maxPrice').value;
+  grid.innerHTML = '<div class="empty-msg" style="font-size:1em;">Loading…</div>';
+
+  try {
+    const params = new URLSearchParams({ category: currentCat, sort, max_price: maxP });
+    if (q) params.set('q', q);
+    const products = await api(`/api/products?${params}`);
+    document.getElementById('results-bar').textContent = `${products.length} result${products.length!==1?'s':''}`;
+
+    if (!products.length) {
+      grid.innerHTML = '<div class="empty-msg">No products found. Try a different search or category.</div>';
+      return;
+    }
+
+    grid.innerHTML = products.map(p => {
+      const disc = p.mrp > p.price ? Math.round((1 - p.price/p.mrp)*100) : 0;
+      return `
+        <div class="product-card">
+          <button class="wish-card-btn" onclick="toggleWishlist(${p.id},this)" title="Wishlist">🤍</button>
+          ${p.img
+            ? `<img src="${p.img}" alt="${p.name}" onerror="this.outerHTML='<div class=prod-emoji>${p.emoji}</div>'" onclick="location.href='/product/${p.id}'" style="cursor:pointer;">`
+            : `<div class="prod-emoji" onclick="location.href='/product/${p.id}'" style="cursor:pointer;">${p.emoji}</div>`}
+          <h3 onclick="location.href='/product/${p.id}'" style="cursor:pointer;">${p.name}</h3>
+          <div class="prod-brand">${p.brand || ''}</div>
+          <div class="prod-rating">★ ${p.rating} (${p.reviews})</div>
+          <div class="prod-prices">
+            <span class="prod-price">₹${Math.round(p.price).toLocaleString('en-IN')}</span>
+            ${disc>0 ? `<span class="prod-mrp">₹${Math.round(p.mrp).toLocaleString('en-IN')}</span><span class="prod-disc">${disc}% off</span>` : ''}
+          </div>
+          <div class="buttons">
+            <button id="add-${p.id}" onclick="addToCart(${p.id},this)">Add to Cart</button>
+            <button onclick="buyNow(${p.id},this)">Buy Now</button>
+          </div>
+        </div>`;
+    }).join('');
+
+  } catch(e) {
+    grid.innerHTML = `<div class="empty-msg">${e.message}</div>`;
+  }
+}
+
+async function buyNow(pid, btn) {
+  btn.disabled = true;
+  try {
+    await api('/api/cart/add', { method:'POST', body:{ product_id: pid } });
+    window.location.href = '/cart';
+  } catch(e) {
+    showToast(e.message, 'error');
+    if (e.message.includes('login')) setTimeout(() => window.location.href='/login', 1500);
+    btn.disabled = false;
+  }
+}
+
+// Init: read URL param for category
+window.addEventListener('DOMContentLoaded', () => {
+  const urlCat = new URLSearchParams(window.location.search).get('category') || 'Dresses';
+  currentCat   = urlCat;
+  const btn    = [...document.querySelectorAll('.category-tabs button')].find(b => b.textContent.trim() === urlCat);
+  if (btn) btn.classList.add('active');
+  else document.querySelector('.category-tabs button').classList.add('active');
+  loadProducts();
+});
+</script>
+</body>
+</html>

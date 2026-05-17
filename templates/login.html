@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UrbanCart – Login</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+  body {
+    margin:0; padding:0; font-family:'Roboto',sans-serif;
+    background:linear-gradient(to bottom,#0f1c2f 0%,#0a3d62 40%,#0b5a8e 70%,#052f4f 100%);
+    display:flex; justify-content:center; align-items:center; min-height:100vh;
+  }
+  .login-container {
+    background:rgba(255,255,255,0.95); padding:40px; border-radius:20px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.3); width:350px; text-align:center;
+  }
+  h2 { margin-bottom:20px; color:#0ea5a4; }
+  input {
+    width:100%; padding:12px; margin:8px 0;
+    border-radius:10px; border:1px solid #ccc; font-size:1em;
+    box-sizing:border-box; outline:none; font-family:'Roboto',sans-serif;
+  }
+  input:focus { border-color:#0ea5a4; }
+  button {
+    width:100%; padding:15px; margin-top:12px;
+    background:#facc15; border:none; border-radius:15px;
+    font-weight:bold; cursor:pointer; transition:0.3s; font-family:'Roboto',sans-serif; font-size:1em;
+  }
+  button:hover { background:#8b5cf6; color:white; }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  p { margin-top:15px; color:#555; }
+  a { color:#0ea5a4; text-decoration:none; }
+  a:hover { color:#8b5cf6; }
+  .hidden { display:none !important; }
+  .error-msg {
+    background:#fee2e2; color:#dc2626; padding:10px; border-radius:10px;
+    font-size:.88em; margin-bottom:10px; display:none; text-align:left;
+  }
+  .back-home { display:block; text-align:center; margin-top:14px; font-size:.85em; }
+</style>
+</head>
+<body>
+
+  <div class="login-container" id="loginBox">
+    <h2>Login to UrbanCart</h2>
+    <div class="error-msg" id="loginError"></div>
+    <input type="text"     id="loginUsername" placeholder="Username or Email" autocomplete="username">
+    <input type="password" id="loginPassword" placeholder="Password"          autocomplete="current-password">
+    <button id="loginBtn">Login</button>
+    <p>Don't have an account? <a href="#" id="showSignup">Sign Up</a></p>
+    <a class="back-home" href="/">← Back to Home</a>
+  </div>
+
+  <div class="login-container hidden" id="signupBox">
+    <h2>Create Account</h2>
+    <div class="error-msg" id="signupError"></div>
+    <input type="text"     id="signupUsername" placeholder="Choose a Username"      autocomplete="username">
+    <input type="email"    id="signupEmail"    placeholder="Email address"          autocomplete="email">
+    <input type="password" id="signupPassword" placeholder="Password (min 6 chars)" autocomplete="new-password">
+    <button id="signupBtn">Sign Up</button>
+    <p>Already have an account? <a href="#" id="showLogin">Login</a></p>
+    <a class="back-home" href="/">← Back to Home</a>
+  </div>
+
+<script src="/static/js/main.js"></script>
+<script>
+  // Toggle forms
+  document.getElementById('showSignup').addEventListener('click', () => {
+    document.getElementById('loginBox').classList.add('hidden');
+    document.getElementById('signupBox').classList.remove('hidden');
+    clearErrors();
+  });
+  document.getElementById('showLogin').addEventListener('click', () => {
+    document.getElementById('signupBox').classList.add('hidden');
+    document.getElementById('loginBox').classList.remove('hidden');
+    clearErrors();
+  });
+
+  function showErr(id, msg) {
+    const e = document.getElementById(id);
+    e.textContent = msg; e.style.display = 'block';
+  }
+  function clearErrors() {
+    ['loginError','signupError'].forEach(id => document.getElementById(id).style.display='none');
+  }
+
+  // ── Sign Up ────────────────────────────────────────────────────────────────
+  document.getElementById('signupBtn').addEventListener('click', async () => {
+    clearErrors();
+    const username = document.getElementById('signupUsername').value.trim();
+    const email    = document.getElementById('signupEmail').value.trim();
+    const password = document.getElementById('signupPassword').value;
+    if (!username || !email || !password) { showErr('signupError','Please fill in all fields'); return; }
+    const btn = document.getElementById('signupBtn');
+    btn.disabled = true; btn.textContent = 'Creating account…';
+    try {
+      await api('/api/register', { method:'POST', body:{ username, email, password }});
+      alert('Signup successful! Welcome to UrbanCart.');
+      window.location.href = '/products';
+    } catch(e) {
+      showErr('signupError', e.message);
+      btn.disabled = false; btn.textContent = 'Sign Up';
+    }
+  });
+
+  // ── Login ──────────────────────────────────────────────────────────────────
+  document.getElementById('loginBtn').addEventListener('click', async () => {
+    clearErrors();
+    const username = document.getElementById('loginUsername').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    if (!username || !password) { showErr('loginError','Please enter both username and password'); return; }
+    const btn = document.getElementById('loginBtn');
+    btn.disabled = true; btn.textContent = 'Logging in…';
+    try {
+      await api('/api/login', { method:'POST', body:{ username, password }});
+      alert('Login successful!');
+      window.location.href = '/products';
+    } catch(e) {
+      showErr('loginError', e.message);
+      btn.disabled = false; btn.textContent = 'Login';
+    }
+  });
+
+  // Enter key
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Enter') return;
+    const signupVisible = !document.getElementById('signupBox').classList.contains('hidden');
+    if (signupVisible) document.getElementById('signupBtn').click();
+    else document.getElementById('loginBtn').click();
+  });
+</script>
+</body>
+</html>

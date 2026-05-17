@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Orders – UrbanCart</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+    body { background:linear-gradient(to bottom,#0f1c2f,#0a3d62,#0b5a8e,#052f4f); color:white; font-family:'Roboto',sans-serif; margin:0; padding:0; }
+    header { text-align:center; font-size:2.2em; padding:20px; font-weight:bold; }
+    nav { display:flex;justify-content:center;align-items:center;gap:20px;flex-wrap:wrap;background:rgba(255,255,255,0.2);padding:10px;backdrop-filter:blur(5px);border-radius:0 0 20px 20px;margin-bottom:20px; }
+    nav a { color:white;text-decoration:none;font-weight:bold; }
+    nav a:hover { color:#facc15; }
+    .cart-count-badge { background:#facc15;color:#000;border-radius:50%;padding:1px 6px;font-size:.75em;font-weight:700;margin-left:3px; }
+
+    .orders-container { max-width:900px;margin:30px auto;background:rgba(255,255,255,0.95);border-radius:20px;padding:20px;color:black;box-shadow:0 5px 20px rgba(0,0,0,0.3); }
+    .order-box { background:rgba(243,243,243,0.9);border-radius:15px;padding:15px;margin-bottom:20px;box-shadow:0 3px 10px rgba(0,0,0,0.2); }
+    .order-box h3 { color:#0ea5a4;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px; }
+    .order-code-tag { background:#e0fafa;color:#0ea5a4;font-size:.75em;padding:3px 10px;border-radius:20px;font-weight:700; }
+    .order-status { background:#dcfce7;color:#166534;font-size:.75em;padding:3px 10px;border-radius:20px;font-weight:700; }
+    .order-box ul { list-style:none;padding:0;margin:0; }
+    .order-box li { border-bottom:1px solid #ddd;padding:7px 0;display:flex;align-items:center;gap:8px;font-size:.9em; }
+    .order-box li:last-child { border:none; }
+    .oi-emoji { font-size:1.5rem;width:36px;text-align:center; }
+    .order-meta { font-size:.82em;color:#888;margin-bottom:8px; }
+    .order-total-line { display:flex;justify-content:space-between;font-weight:700;color:#0ea5a4;font-size:1em;padding-top:8px;border-top:1px solid #e0e0e0;margin-top:6px; }
+    .order-detail-link { font-size:.82em;color:#0ea5a4;text-decoration:none;font-weight:700; }
+    .order-detail-link:hover { color:#8b5cf6; }
+
+    .empty-msg { text-align:center;padding:40px;font-size:1.1em;color:#666; }
+    .empty-msg a { display:inline-block;margin-top:16px;padding:11px 24px;background:#facc15;color:#000;border-radius:12px;font-weight:700;text-decoration:none;transition:.2s; }
+    .empty-msg a:hover { background:#8b5cf6;color:white; }
+
+    footer { text-align:center;color:white;margin-top:50px;padding:20px; }
+  </style>
+</head>
+<body>
+  <header>Your Orders</header>
+  <nav id="main-nav">
+    <a href="/">Home</a>
+    <a href="/products">Shop</a>
+    <a href="/cart">Cart <span class="cart-count-badge" style="display:none"></span></a>
+  </nav>
+
+  <div class="orders-container">
+    {% if not orders %}
+      <div class="empty-msg">
+        📦 No orders yet.<br>
+        <a href="/products">Start Shopping</a>
+      </div>
+    {% else %}
+      {% for o in orders %}
+      {% set order = o['order'] %}
+      {% set items = o['items'] %}
+      <div class="order-box">
+        <h3>
+          Order on {{ order.created_at[:16] }}
+          <span style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="order-code-tag">{{ order.order_code }}</span>
+            <span class="order-status">{{ order.status }}</span>
+            <a href="/order/{{ order.id }}" class="order-detail-link">View Details →</a>
+          </span>
+        </h3>
+        <div class="order-meta">💳 {{ order.payment|upper }} &nbsp;|&nbsp; 📍 {{ order.address_snap[:50] }}{% if order.address_snap|length > 50 %}…{% endif %}</div>
+        <ul>
+          {% for i in items %}
+          <li>
+            <span class="oi-emoji">{{ i.emoji }}</span>
+            <span style="flex:1;">{{ i.name }}</span>
+            <span style="color:#888;">×{{ i.qty }}</span>
+            <span style="font-weight:700;">₹{{ "{:,.0f}".format(i.price * i.qty) }}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        <div class="order-total-line">
+          <span>Total Paid</span>
+          <span>₹{{ "{:,.0f}".format(order.total) }}</span>
+        </div>
+      </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  <footer>© <span class="year"></span> UrbanCart — Joy of Shopping</footer>
+
+  <script src="/static/js/main.js"></script>
+</body>
+</html>

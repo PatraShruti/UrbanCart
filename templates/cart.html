@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cart – UrbanCart</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+  body {margin:0;padding:0;font-family:'Roboto',sans-serif;background:linear-gradient(to bottom,#0f1c2f 0%,#0a3d62 40%,#0b5a8e 70%,#052f4f 100%);color:white;}
+  header{padding:20px;text-align:center;font-size:2.5em;font-weight:bold;}
+  nav{display:flex;justify-content:center;align-items:center;gap:20px;flex-wrap:wrap;background:rgba(255,255,255,0.2);padding:10px;backdrop-filter:blur(5px);border-radius:0 0 20px 20px;margin-bottom:30px;}
+  nav a{color:white;text-decoration:none;font-weight:bold;transition:0.3s;}
+  nav a:hover{color:#facc15;}
+  .cart-count-badge{background:#facc15;color:#000;border-radius:50%;padding:1px 6px;font-size:.75em;font-weight:700;margin-left:3px;}
+
+  .cart-container{max-width:1200px;margin:0 auto;padding:20px;}
+  .cart-item{display:flex;align-items:center;flex-wrap:wrap;gap:10px;background:rgba(255,255,255,0.9);color:black;margin-bottom:15px;padding:15px;border-radius:15px;box-shadow:0 5px 15px rgba(0,0,0,0.2);}
+  .cart-item img,.cart-item .ci-emoji{width:120px;height:100px;object-fit:cover;border-radius:10px;flex-shrink:0;}
+  .cart-item .ci-emoji{display:flex;align-items:center;justify-content:center;font-size:3rem;background:#f0f4f8;}
+  .cart-item h3{margin:0 10px 4px 0;flex:1;color:#0ea5a4;min-width:120px;}
+  .cart-item .ci-brand{font-size:.8em;color:#888;margin-bottom:4px;}
+  .cart-item .ci-price{font-weight:bold;font-size:1.05em;}
+  .cart-item .ci-mrp{font-size:.8em;color:#aaa;text-decoration:line-through;margin-left:6px;}
+  .qty-row{display:flex;align-items:center;gap:8px;margin-top:6px;}
+  .qty-btn{width:28px;height:28px;background:#facc15;border:none;border-radius:8px;font-size:1em;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;}
+  .qty-btn:hover{background:#8b5cf6;color:white;}
+  .qty-val{font-weight:700;min-width:20px;text-align:center;}
+  .ci-remove{font-size:.82em;color:#aaa;cursor:pointer;margin-top:4px;background:none;border:none;padding:0;font-family:'Roboto',sans-serif;}
+  .ci-remove:hover{color:#ef4444;}
+  .ci-subtotal{font-weight:700;font-size:1.05em;margin-left:auto;}
+
+  .cart-summary{background:rgba(255,255,255,0.9);color:black;border-radius:15px;padding:20px;max-width:1200px;margin:0 auto 20px;box-shadow:0 5px 15px rgba(0,0,0,0.2);}
+  .summary-row{display:flex;justify-content:space-between;font-size:.92em;margin-bottom:7px;}
+  .summary-row.total{font-weight:700;font-size:1.1em;border-top:1px solid #eee;padding-top:10px;margin-top:6px;}
+  .summary-saving{color:#22c55e;font-size:.85em;font-weight:700;margin:6px 0;}
+  .cart-actions{display:flex;gap:12px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap;}
+  .cart-actions button{padding:11px 24px;border:none;border-radius:12px;font-weight:700;cursor:pointer;transition:.2s;font-family:'Roboto',sans-serif;font-size:.92em;}
+  .btn-checkout{background:#facc15;color:#000;}
+  .btn-checkout:hover{background:#8b5cf6;color:white;}
+  .btn-clear{background:#ef4444;color:white;}
+  .btn-clear:hover{background:#dc2626;}
+
+  .total{text-align:right;font-size:1.5em;margin-top:20px;}
+  .empty-msg{text-align:center;font-size:1.5em;padding:60px 20px;color:rgba(255,255,255,.8);}
+  .empty-msg a{display:inline-block;margin-top:20px;padding:12px 28px;background:#facc15;color:#000;border-radius:12px;font-weight:700;text-decoration:none;transition:.2s;}
+  .empty-msg a:hover{background:#8b5cf6;color:white;}
+  footer{padding:20px;text-align:center;color:white;text-shadow:1px 1px 5px rgba(0,0,0,.3);margin-top:50px;}
+</style>
+</head>
+<body>
+
+<header>Your Cart</header>
+<nav id="main-nav">
+  <a href="/">Home</a>
+  <a href="/products">Shop</a>
+  <a href="/cart">Cart <span class="cart-count-badge" style="display:none"></span></a>
+</nav>
+
+<div class="cart-container" id="cartContainer"></div>
+<div id="cartSummary"></div>
+
+<footer>© <span class="year"></span> UrbanCart — Dynamic Shopping Experience</footer>
+
+<script src="/static/js/main.js"></script>
+<script>
+let cartData = [];
+
+async function loadCart() {
+  try {
+    cartData = await api('/api/cart');
+    renderCart();
+  } catch(e) {
+    document.getElementById('cartContainer').innerHTML = `<div class="empty-msg">${e.message}</div>`;
+  }
+}
+
+function renderCart() {
+  const box     = document.getElementById('cartContainer');
+  const summary = document.getElementById('cartSummary');
+
+  if (!cartData.length) {
+    box.innerHTML     = '<div class="empty-msg">Your cart is empty.<br><a href="/products">Continue Shopping</a></div>';
+    summary.innerHTML = '';
+    return;
+  }
+
+  const subtotal = cartData.reduce((s,i) => s + i.price * i.qty, 0);
+  const savings  = cartData.reduce((s,i) => s + (i.mrp - i.price) * i.qty, 0);
+  const shipping = subtotal >= 499 ? 0 : 40;
+  const total    = subtotal + shipping;
+
+  box.innerHTML = cartData.map(item => {
+    const disc = item.mrp > item.price ? Math.round((1-item.price/item.mrp)*100) : 0;
+    return `
+    <div class="cart-item">
+      ${item.img
+        ? `<img src="${item.img}" alt="${item.name}" onerror="this.outerHTML='<div class=ci-emoji>${item.emoji||'🛍️'}</div>'">`
+        : `<div class="ci-emoji">${item.emoji||'🛍️'}</div>`}
+      <div style="flex:1;min-width:140px;">
+        <h3>${item.name}</h3>
+        <div class="ci-brand">${item.brand||''}</div>
+        <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+          <span class="ci-price">₹${Math.round(item.price).toLocaleString('en-IN')}</span>
+          <span class="ci-mrp">₹${Math.round(item.mrp).toLocaleString('en-IN')}</span>
+          ${disc>0?`<span style="font-size:.8em;color:#22c55e;font-weight:700;">${disc}% off</span>`:''}
+        </div>
+        <div class="qty-row">
+          <button class="qty-btn" onclick="changeQty(${item.id}, ${item.qty-1})">−</button>
+          <span class="qty-val">${item.qty}</span>
+          <button class="qty-btn" onclick="changeQty(${item.id}, ${item.qty+1})">+</button>
+        </div>
+        <button class="ci-remove" onclick="removeItem(${item.id})">✕ Remove</button>
+      </div>
+      <div class="ci-subtotal">₹${Math.round(item.price*item.qty).toLocaleString('en-IN')}</div>
+    </div>`;
+  }).join('');
+
+  summary.innerHTML = `
+    <div class="cart-summary">
+      <div class="summary-row"><span>Subtotal (${cartData.length} items)</span><span>₹${Math.round(subtotal).toLocaleString('en-IN')}</span></div>
+      <div class="summary-row"><span>Discount</span><span style="color:#22c55e;">−₹${Math.round(savings).toLocaleString('en-IN')}</span></div>
+      <div class="summary-row"><span>Delivery</span><span>${shipping===0?'<span style="color:#22c55e;font-weight:700;">FREE</span>':'₹'+shipping}</span></div>
+      <div class="summary-row total"><span>Total Amount</span><span>₹${Math.round(total).toLocaleString('en-IN')}</span></div>
+      ${savings>0?`<div class="summary-saving">🎉 You save ₹${Math.round(savings).toLocaleString('en-IN')} on this order!</div>`:''}
+      ${shipping===0?'<div style="font-size:.82em;color:#22c55e;">🚚 Free delivery on this order</div>':`<div style="font-size:.82em;color:#888;">Add ₹${Math.round(499-subtotal)} more for free delivery</div>`}
+      <div class="cart-actions">
+        <button class="btn-clear" onclick="clearAll()">🗑 Clear Cart</button>
+        <button class="btn-checkout" onclick="location.href='/checkout'">Proceed to Checkout →</button>
+      </div>
+    </div>`;
+}
+
+async function changeQty(pid, qty) {
+  try {
+    await api('/api/cart/update', { method:'POST', body:{ product_id:pid, qty }});
+    if (qty<=0) cartData=cartData.filter(i=>i.id!==pid);
+    else { const it=cartData.find(i=>i.id===pid); if(it) it.qty=qty; }
+    renderCart(); refreshCartBadge();
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function removeItem(pid) {
+  try {
+    await api('/api/cart/remove', { method:'POST', body:{ product_id:pid }});
+    cartData=cartData.filter(i=>i.id!==pid);
+    renderCart(); refreshCartBadge();
+    showToast('Item removed');
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+async function clearAll() {
+  if (!confirm('Clear your entire cart?')) return;
+  try {
+    await api('/api/cart/clear', { method:'POST' });
+    cartData=[]; renderCart(); refreshCartBadge();
+    showToast('Cart cleared');
+  } catch(e) { showToast(e.message,'error'); }
+}
+
+loadCart();
+</script>
+</body>
+</html>

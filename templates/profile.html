@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Profile – UrbanCart</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+  body{margin:0;padding:0;font-family:'Roboto',sans-serif;background:linear-gradient(to bottom,#0f1c2f,#0a3d62,#0b5a8e,#052f4f);color:white;}
+  header{padding:20px;text-align:center;font-size:2em;font-weight:bold;}
+  nav{display:flex;justify-content:center;align-items:center;gap:20px;flex-wrap:wrap;background:rgba(255,255,255,0.2);padding:10px;backdrop-filter:blur(5px);border-radius:0 0 20px 20px;margin-bottom:20px;}
+  nav a{color:white;text-decoration:none;font-weight:bold;}nav a:hover{color:#facc15;}
+  .cart-count-badge{background:#facc15;color:#000;border-radius:50%;padding:1px 6px;font-size:.75em;font-weight:700;margin-left:3px;}
+  .profile-wrap{max-width:800px;margin:0 auto;padding:0 16px 40px;}
+  .pcard{background:rgba(255,255,255,.95);border-radius:20px;padding:22px;color:#222;box-shadow:0 5px 20px rgba(0,0,0,.25);margin-bottom:14px;}
+  .pcard h3{color:#0ea5a4;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid #eee;}
+  .form-group{margin-bottom:12px;}
+  .form-group label{display:block;font-size:.85em;font-weight:700;color:#555;margin-bottom:4px;}
+  .form-group input,.form-group select{width:100%;padding:10px;border-radius:10px;border:1px solid #ccc;font-size:.92em;font-family:'Roboto',sans-serif;outline:none;box-sizing:border-box;}
+  .form-group input:focus{border-color:#0ea5a4;}
+  .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  button.save-btn{padding:10px 22px;background:#facc15;border:none;border-radius:10px;font-weight:700;cursor:pointer;transition:.2s;font-family:'Roboto',sans-serif;}
+  button.save-btn:hover{background:#8b5cf6;color:white;}
+  .addr-card{border:2px solid #e0e0e0;border-radius:12px;padding:14px;margin-bottom:10px;position:relative;}
+  .addr-card.default{border-color:#0ea5a4;}
+  .addr-tag{display:inline-block;background:#e0fafa;color:#0ea5a4;font-size:.75em;font-weight:700;padding:2px 8px;border-radius:6px;margin-bottom:6px;}
+  .addr-del{position:absolute;top:10px;right:10px;color:#ef4444;font-size:.82em;cursor:pointer;background:none;border:none;font-family:'Roboto',sans-serif;}
+  .addr-del:hover{text-decoration:underline;}
+  .stat-chips{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+  .chip{background:#e0fafa;color:#0ea5a4;padding:8px 16px;border-radius:20px;font-weight:700;font-size:.9em;}
+  footer{text-align:center;color:white;padding:20px;}
+</style></head>
+<body>
+<header>👤 My Profile</header>
+<nav id="main-nav">
+  <a href="/">Home</a>
+  <a href="/products">Shop</a>
+  <a href="/cart">Cart <span class="cart-count-badge" style="display:none"></span></a>
+</nav>
+
+<div class="profile-wrap">
+  <div class="pcard">
+    <div class="stat-chips">
+      <div class="chip">👤 {{ user.username }}</div>
+      <div class="chip">📦 {{ order_count }} Orders</div>
+      <div class="chip">📍 {{ addresses|length }} Addresses</div>
+    </div>
+    <h3>Personal Information</h3>
+    <div class="form-row">
+      <div class="form-group"><label>Username</label><input value="{{ user.username }}" disabled style="background:#f9f9f9;"></div>
+      <div class="form-group"><label>Email</label><input value="{{ user.email }}" disabled style="background:#f9f9f9;"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Full Name</label><input id="pname" value="{{ user.full_name or '' }}" placeholder="Your full name"></div>
+      <div class="form-group"><label>Phone</label><input id="pphone" value="{{ user.phone or '' }}" placeholder="Mobile number"></div>
+    </div>
+    <button class="save-btn" onclick="saveProfile()">Save Changes</button>
+  </div>
+
+  <div class="pcard">
+    <h3>📍 Saved Addresses</h3>
+    {% if addresses %}{% for a in addresses %}
+    <div class="addr-card {% if a.is_default %}default{% endif %}">
+      <div class="addr-tag">{{ a.label }}{% if a.is_default %} ✓ Default{% endif %}</div>
+      <div style="font-weight:700;margin-bottom:3px;">{{ a.full_name }} &nbsp;<span style="font-size:.82em;color:#888;">{{ a.phone }}</span></div>
+      <div style="font-size:.87em;color:#555;line-height:1.5;">{{ a.line1 }}{% if a.line2 %}, {{ a.line2 }}{% endif %}, {{ a.city }}, {{ a.state }} – {{ a.pincode }}</div>
+      <button class="addr-del" onclick="delAddr({{ a.id }},this)">🗑️ Delete</button>
+    </div>
+    {% endfor %}{% else %}
+    <div style="font-size:.88em;color:#888;margin-bottom:12px;">No saved addresses yet.</div>
+    {% endif %}
+    <details style="margin-top:10px;"><summary style="cursor:pointer;color:#0ea5a4;font-weight:700;font-size:.9em;list-style:none;">+ Add New Address</summary>
+      <div style="margin-top:12px;">
+        <div class="form-row"><div class="form-group"><label>Full Name</label><input id="an"></div><div class="form-group"><label>Phone</label><input id="ap"></div></div>
+        <div class="form-group"><label>Address Line 1</label><input id="al1" placeholder="House, Street, Area"></div>
+        <div class="form-group"><label>Address Line 2</label><input id="al2" placeholder="Landmark (optional)"></div>
+        <div class="form-row"><div class="form-group"><label>City</label><input id="acity"></div><div class="form-group"><label>State</label><input id="astate"></div></div>
+        <div class="form-row"><div class="form-group"><label>PIN Code</label><input id="apin"></div><div class="form-group"><label>Label</label><select id="albl"><option>Home</option><option>Work</option><option>Other</option></select></div></div>
+        <button class="save-btn" style="margin-top:6px;" onclick="saveAddr()">Save Address</button>
+      </div>
+    </details>
+  </div>
+</div>
+
+<footer>© <span class="year"></span> UrbanCart</footer>
+<script src="/static/js/main.js"></script>
+<script>
+async function saveProfile(){try{await api('/api/profile/update',{method:'POST',body:{full_name:document.getElementById('pname').value.trim(),phone:document.getElementById('pphone').value.trim()}});showToast('Profile updated ✅','success');}catch(e){showToast(e.message,'error');}}
+async function saveAddr(){
+  const d={full_name:document.getElementById('an').value.trim(),phone:document.getElementById('ap').value.trim(),line1:document.getElementById('al1').value.trim(),line2:document.getElementById('al2').value.trim(),city:document.getElementById('acity').value.trim(),state:document.getElementById('astate').value.trim(),pincode:document.getElementById('apin').value.trim(),label:document.getElementById('albl').value};
+  if(!d.full_name||!d.phone||!d.line1||!d.city||!d.state||!d.pincode){showToast('Fill all required fields','error');return;}
+  try{await api('/api/address/add',{method:'POST',body:d});showToast('Address saved!','success');setTimeout(()=>location.reload(),700);}catch(e){showToast(e.message,'error');}
+}
+async function delAddr(id,btn){if(!confirm('Delete this address?'))return;try{await api('/api/address/delete',{method:'POST',body:{id}});btn.closest('.addr-card').remove();showToast('Deleted');}catch(e){showToast(e.message,'error');}}
+</script>
+</body></html>
